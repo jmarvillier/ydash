@@ -15,6 +15,10 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isV2Root(root) {
+      return root == 'ydash_v2' || root == 'ydash_v2_stg';
+    }
+
     // ---- v1 (dashboard-weex) — NE PAS MODIFIER sans GO -------------------------------
     match /users/{uid}/{document=**} {
       allow read, write: if isOwner(uid);
@@ -22,13 +26,19 @@ service cloud.firestore {
 
     // ---- v2 — prod et staging isolés par collection racine --------------------------
     // Écritures OKX réservées au backend (Admin SDK, hors règles). Provisoire jusqu'à C04.
-    match /ydash_v2/{uid}/{document=**} {
-      allow read: if isOwner(uid);
+    match /{root}/{uid}/{document=**} {
+      allow read: if isV2Root(root) && isOwner(uid);
       allow write: if false;
     }
-    match /ydash_v2_stg/{uid}/{document=**} {
-      allow read: if isOwner(uid);
-      allow write: if false;
+
+    // Erreurs front (D11) : création seule par le propriétaire, taille bornée, TTL sur expireAt.
+    match /{root}/{uid}/client_errors/{errorId} {
+      allow create: if isV2Root(root) && isOwner(uid)
+        && request.resource.data.keys().hasOnly(['message', 'stack', 'componentStack', 'source', 'url',
+             'userAgent', 'version', 'sha', 'env', 'at', 'expireAt'])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 1000
+        && request.resource.data.expireAt is timestamp;
     }
 
     // Tout le reste est refusé.

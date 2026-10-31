@@ -139,3 +139,51 @@ déploiement des règles :
    `firestore.rules` ; reporter toute différence.
 2. Tester avec l'émulateur (`npm run dev:full`), puis seulement alors créer la variable GitHub
    **`FIRESTORE_RULES_VERIFIED=true`**. Tant qu'elle est absente, la CI déploie les fonctions mais **jamais** les règles.
+
+## 7. Monitoring et alerting
+
+### 7.1 Logs structurés (Functions)
+
+`functions/src/logger.ts` émet du JSON vers Cloud Logging : `event`, `env` (`prod`/`stg`), `requestId`,
+`uidHash` (SHA-256 tronqué, **jamais l'uid en clair**), `endpoint`, `durationMs`, `status`, `okxCode`.
+Les champs ressemblant à un secret (`secret`, `passphrase`, `apiKey`, `signature`, `token`…) sont masqués.
+
+| Événement      | Émis par                                   | Usage                         |
+| -------------- | ------------------------------------------ | ----------------------------- |
+| `http.request` | chaque fonction HTTP (`health`, proxy C02) | latence, codes HTTP           |
+| `sync.success` | orchestrateur de sync (C10) via `logSyncResult` | alerte « aucune sync »  |
+| `sync.error`   | idem, avec `okxCode`                       | alerte « erreurs de sync »    |
+| `okx.error`    | client OKX (C02)                           | diagnostic                    |
+
+Requête Logs Explorer : `jsonPayload.event="sync.error" AND jsonPayload.env="prod"`.
+
+### 7.2 Alertes (e-mail)
+
+```bash
+./infra/monitoring/setup-monitoring.sh jeremie.marvillier@gmail.com dashboard-ydash
+```
+
+Crée (idempotent) les métriques `ydash_sync_errors` / `ydash_sync_success` (label `env`) et deux politiques
+(`infra/monitoring/policy-*.json`), limitées à la prod :
+
+- **> 3 `sync.error` en 1 h** → une clé OKX révoquée déclenche l'alerte dès la sync horaire suivante (< 1 h) ;
+- **aucun `sync.success` depuis 23 h 30** (durée d'absence maximale de Cloud Monitoring, ≈ 24 h).
+
+Telegram (optionnel) : ajouter un canal *webhook* Cloud Monitoring pointant vers le relais du bot existant
+`xperps_watch`, puis l'ajouter aux `notificationChannels` des politiques.
+
+> Les métriques n'ont de données qu'une fois l'orchestrateur de sync (C10) en place ; d'ici là, l'alerte
+> « aucune sync » se déclencherait à vide : lancer le script **après** la mise en service de C10.
+
+### 7.3 Erreurs front
+
+- `ErrorBoundary` (port v1) autour de l'app + capture de `window.error` et `unhandledrejection`
+  (`web/src/monitoring/`), 20 rapports max par session, jamais bloquant.
+- Sink par défaut : console. Le ticket C14 branche le sink Firestore
+  `ydash_v2[_stg]/{uid}/client_errors` (création seule par le propriétaire, schéma borné — `firestore.rules`),
+  avec `expireAt` en **Timestamp** pour la rétention de 30 jours :
+  ```bash
+  gcloud firestore fields ttls update expireAt --collection-group=client_errors --enable-ttl --project dashboard-ydash
+  ```
+- Alternative : Sentry (plan gratuit) en remplaçant le sink, si un suivi plus riche est souhaité.
+- Page Réglages (P11) : dernier statut de sync et dernière erreur.

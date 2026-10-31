@@ -1,0 +1,29 @@
+{
+  "displayName": "Ydash [prod] — erreurs de sync OKX",
+  "documentation": {
+    "content": "Plus de 3 synchronisations OKX en erreur en 1 h (clé expirée/révoquée, quota, changement d'API). Logs : jsonPayload.event=\"sync.error\" AND jsonPayload.env=\"prod\". Runbook : docs/INFRA.md §7.",
+    "mimeType": "text/markdown"
+  },
+  "combiner": "OR",
+  "conditions": [
+    {
+      "displayName": "sync.error > 3 / h",
+      "conditionThreshold": {
+        "filter": "resource.type=\"cloud_run_revision\" AND metric.type=\"logging.googleapis.com/user/ydash_sync_errors\" AND metric.label.env=\"prod\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "3600s",
+            "perSeriesAligner": "ALIGN_SUM",
+            "crossSeriesReducer": "REDUCE_SUM"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 3,
+        "duration": "0s",
+        "trigger": { "count": 1 }
+      }
+    }
+  ],
+  "alertStrategy": { "autoClose": "86400s" },
+  "notificationChannels": ["__CHANNEL__"]
+}

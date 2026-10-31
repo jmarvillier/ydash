@@ -1,0 +1,27 @@
+{
+  "displayName": "Ydash [prod] — aucune sync OKX réussie",
+  "documentation": {
+    "content": "Aucun événement sync.success en prod depuis ~24 h (durée max d'absence Cloud Monitoring : 23 h 30). Vérifier Cloud Scheduler, les quotas et la validité des clés. Runbook : docs/INFRA.md §7.",
+    "mimeType": "text/markdown"
+  },
+  "combiner": "OR",
+  "conditions": [
+    {
+      "displayName": "sync.success absent 23h30",
+      "conditionAbsent": {
+        "filter": "resource.type=\"cloud_run_revision\" AND metric.type=\"logging.googleapis.com/user/ydash_sync_success\" AND metric.label.env=\"prod\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "3600s",
+            "perSeriesAligner": "ALIGN_SUM",
+            "crossSeriesReducer": "REDUCE_SUM"
+          }
+        ],
+        "duration": "84600s",
+        "trigger": { "count": 1 }
+      }
+    }
+  ],
+  "alertStrategy": { "autoClose": "86400s" },
+  "notificationChannels": ["__CHANNEL__"]
+}
