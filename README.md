@@ -12,8 +12,9 @@
 
 ## État du projet
 
-🚧 **Migration en cours — phase 0 (backlog & fondations).** Aucune ligne applicative n'est encore écrite :
-le dépôt contient l'analyse de l'existant et le backlog complet de la migration.
+🚧 **Migration en cours — milestone 0 (Fondations DevOps) livré**, milestone 1 (socle technique) à venir.
+Le monorepo, la CI, le CD prod/staging, le versioning, le déploiement backend, le dev local et le monitoring
+sont en place ; aucune fonctionnalité métier n'est encore écrite.
 
 | | |
 |---|---|
