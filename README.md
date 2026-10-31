@@ -1,5 +1,7 @@
 # Ydash v2
 
+[![ci](https://github.com/jmarvillier/ydash/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/jmarvillier/ydash/actions/workflows/ci.yml)
+
 > Dashboard de trading crypto personnel, **branché en direct sur OKX** (compte EEA) : journal spot, paires,
 > futures XPERP, Scaled Mirror DCA et **suivi Earn** (rendement + plus/moins-value marché).
 > Successeur de [`dashboard-weex`](https://github.com/jmarvillier/dashboard-weex) (Ydash v1), qui reste en service
