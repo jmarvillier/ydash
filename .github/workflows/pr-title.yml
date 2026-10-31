@@ -1,0 +1,41 @@
+name: pr-title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  conventional-title:
+    name: conventional-title
+    runs-on: ubuntu-latest
+    # Les PRs de release (release-please) et Dependabot ont déjà un titre conforme.
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            test
+            docs
+            chore
+            ci
+            build
+            revert
+          scopes: |
+            web
+            functions
+            core
+            docs
+            deps
+            ci
+            release
+            main
+          requireScope: false
+          subjectPattern: ^.+$

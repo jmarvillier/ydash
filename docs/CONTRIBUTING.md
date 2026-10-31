@@ -39,3 +39,48 @@ ydash/
 | `npm test` / `npm run test:coverage`           | Vitest dans chaque workspace                          |
 | `npm run build`                                | build `core` (dist), `web` (dist), `functions` (lib)  |
 | `npm run <script> -w web` (ou `core`, `functions`) | cible un seul workspace                           |
+
+## Flux git
+
+```
+feature/<clé>-<slug>  ──PR (squash)──►  develop  ──PR (merge commit)──►  master
+     (ex. feature/c02-okx-proxy)        = staging                          = prod + release
+```
+
+| Branche     | Rôle                                   | Protection                                                                                         |
+| ----------- | -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `master`    | production (`/ydash/`), branche par défaut | PR obligatoire, checks `build-test` + `conventional-title` requis, pas de force-push ni suppression |
+| `develop`   | staging (`/ydash/staging/`)            | idem + historique linéaire (squash uniquement)                                                     |
+| `feature/*` | une branche par ticket (`fix/*`, `chore/*` acceptés) | aucune ; supprimée automatiquement après fusion                                       |
+
+1. Partir de `develop` à jour : `git switch develop && git pull && git switch -c feature/d04-ci`.
+2. Ouvrir une PR vers `develop` dont le **titre** respecte Conventional Commits et dont le corps
+   référence le ticket (`Closes #9`). La PR est **squashée** : le titre devient le message du commit.
+3. Pour livrer en prod : PR `develop → master` (titre `chore(release): …`), fusionnée en **merge commit**
+   pour que `develop` reste un ancêtre de `master`.
+4. Après une release (PR release-please fusionnée sur `master`), resynchroniser :
+   PR `master → develop` en merge commit (ou `git merge origin/master` sur une branche dédiée).
+
+> **Décision** : le ticket D02 demandait à la fois un historique linéaire sur `master` et des merge commits
+> `develop → master`, ce qui est incompatible. On garde les merge commits et la linéarité sur `develop` seulement.
+
+Les protections sont appliquées par script (compte admin requis) :
+
+```bash
+./tools/github/protect-branches.sh jmarvillier/ydash
+```
+
+## Convention de commits — Conventional Commits
+
+Format : `type(scope)!: description à l'impératif, en minuscule` — vérifié sur le **titre de PR** par le
+workflow `pr-title` (le squash en fait le message de commit, lu ensuite par release-please).
+
+| Type                               | Usage                                   | Effet sur la version |
+| ---------------------------------- | --------------------------------------- | -------------------- |
+| `feat`                             | nouvelle fonctionnalité                 | mineure              |
+| `fix` / `perf`                     | correction / performance                | patch                |
+| `feat!` ou `BREAKING CHANGE:`      | rupture de compatibilité                | majeure              |
+| `refactor` `test` `docs` `chore` `ci` `build` `revert` | le reste       | aucune               |
+
+Scopes : `web`, `functions`, `core`, `docs`, `deps`, `ci`, `release`, `main` (facultatif).
+Exemples : `feat(functions): proxy OKX signé`, `fix(web): arrondi du PnL latent`, `ci: cache npm`.
