@@ -31,6 +31,14 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
+    files: ['web/build/sw.template.js'],
+    languageOptions: { globals: globals.serviceworker },
+  },
+  {
+    files: ['web/build/**/*.ts'],
+    languageOptions: { globals: globals.node },
+  },
+  {
     files: ['web/src/**/*.{ts,tsx}'],
     languageOptions: { globals: globals.browser },
     plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },

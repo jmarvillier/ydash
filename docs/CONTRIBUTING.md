@@ -106,3 +106,23 @@ Exemples : `feat(functions): proxy OKX signé`, `fix(web): arrondi du PnL latent
 - Versions exactes (`npm i -E`) ; Dependabot (`.github/dependabot.yml`) ouvre chaque lundi des PRs groupées
   vers `develop` (npm mineures/patchs, GitHub Actions). Les montées **majeures** font l'objet d'un ticket.
 - `npm audit --audit-level=high --omit=dev` tourne en CI (non bloquant pour l'instant, bloquant après stabilisation).
+
+## Versioning et releases
+
+- **Une seule version SemVer** pour tout le dépôt (racine + `core` + `web` + `functions` + lockfile),
+  pilotée par **release-please** (`release-please-config.json`, `.release-please-manifest.json`) à partir des
+  Conventional Commits arrivés sur `master`.
+- À chaque push sur `master`, le workflow `release-please` ouvre ou met à jour une PR `chore(master): release x.y.z`
+  (bump + `CHANGELOG.md`). Sa fusion crée le tag `vX.Y.Z` et la GitHub Release, et redéploie la prod.
+- Phase alpha : `versioning: prerelease` (`2.0.0-alpha.N`). Pour passer en `2.0.0` stable, retirer `prerelease`
+  / `versioning` de la config.
+- **Première release** : `release-as: 2.0.0-alpha.1` est forcé dans la config (le milestone 0 ne contient que des
+  commits `chore/ci/docs`, qui ne déclenchent pas de bump). ⚠️ **Retirer `release-as`** juste après la
+  publication de `v2.0.0-alpha.1`.
+- Sans secret `RELEASE_PLEASE_TOKEN`, la CI ne se lance pas sur la PR de release (limite de `GITHUB_TOKEN`) :
+  la fusionner en tant qu'admin, ou créer un jeton (GitHub App ou PAT fin limité à ce dépôt, `contents` +
+  `pull-requests` en écriture).
+- Le build injecte `version`, `sha`, `buildTime` et l'environnement (`web/build/versionPlugin.ts`) :
+  - dans l'app (`buildInfo.ts`, affiché en pied de page, puis Réglages P11 / toast de mise à jour P10) ;
+  - dans `version.json` (ex. https://jmarvillier.github.io/ydash/version.json), toujours lu sur le réseau ;
+  - dans `sw.js` : clé de cache `ydash-{version}-{sha}`, les anciens caches sont purgés à l'activation.

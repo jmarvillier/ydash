@@ -1,0 +1,36 @@
+name: release-please
+
+# Sur master : ouvre / met à jour la PR de release (bump SemVer des 3 workspaces, CHANGELOG.md).
+# Sa fusion crée le tag vX.Y.Z et la GitHub Release ; le push sur master redéploie la prod
+# (deploy-pages) avec la nouvelle version dans version.json.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          # Un jeton GitHub App / PAT fin est nécessaire pour que la CI tourne sur la PR de release
+          # (les événements créés par GITHUB_TOKEN ne déclenchent pas d'autres workflows).
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: master
+
+      - name: Résumé
+        if: ${{ steps.release.outputs.release_created }}
+        run: echo "Release ${{ steps.release.outputs.tag_name }} créée" >> "$GITHUB_STEP_SUMMARY"
