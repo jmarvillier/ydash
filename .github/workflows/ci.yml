@@ -30,6 +30,11 @@ jobs:
       - name: Install
         run: npm ci --no-audit --no-fund
 
+      - name: Audit des dépendances (non bloquant pour l'instant)
+        # Passer continue-on-error à false une fois le socle stabilisé (ticket D09).
+        continue-on-error: true
+        run: npm audit --audit-level=high --omit=dev
+
       - name: Format
         run: npm run format:check
 

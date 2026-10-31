@@ -96,3 +96,13 @@ Exemples : `feat(functions): proxy OKX signé`, `fix(web): arrondi du PnL latent
   (vues Board par milestone + Table à ajouter dans l'UI).
 - `tickets/` reste dans le dépôt : c'est la source du backlog initial (55 tickets). Le label `bug` est
   créé par `python3 tickets/create_issues.py --repo jmarvillier/ydash` (idempotent).
+
+## Dépendances
+
+- **Tout passe par npm** et le lockfile (plus aucun script chargé depuis un CDN comme `xlsx` en v1).
+  SheetJS sera ajouté avec l'export .xlsx (ticket P05), en version épinglée — la version publiée sur le
+  registre npm (`xlsx@0.18.5`) n'est plus maintenue : utiliser le tarball officiel `cdn.sheetjs.com`
+  référencé dans `web/package.json` ou une alternative (`exceljs`), à trancher dans P05.
+- Versions exactes (`npm i -E`) ; Dependabot (`.github/dependabot.yml`) ouvre chaque lundi des PRs groupées
+  vers `develop` (npm mineures/patchs, GitHub Actions). Les montées **majeures** font l'objet d'un ticket.
+- `npm audit --audit-level=high --omit=dev` tourne en CI (non bloquant pour l'instant, bloquant après stabilisation).
