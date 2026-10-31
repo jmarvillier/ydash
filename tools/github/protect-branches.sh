@@ -7,6 +7,7 @@ set -euo pipefail
 REPO="${1:-jmarvillier/ydash}"
 CI_CHECK="build-test"         # job du workflow ci.yml (affiché « ci / build-test »)
 TITLE_CHECK="conventional-title" # job du workflow pr-title.yml
+SECRETS_CHECK="secrets-scan"     # job gitleaks du workflow ci.yml
 
 echo "→ Réglages de fusion du dépôt $REPO"
 gh api -X PATCH "repos/$REPO" \
@@ -26,7 +27,7 @@ protect() {
     -H "Accept: application/vnd.github+json" \
     --input - >/dev/null <<JSON
 {
-  "required_status_checks": { "strict": true, "contexts": ["$CI_CHECK", "$TITLE_CHECK"] },
+  "required_status_checks": { "strict": true, "contexts": ["$CI_CHECK", "$SECRETS_CHECK", "$TITLE_CHECK"] },
   "enforce_admins": true,
   "required_pull_request_reviews": {
     "required_approving_review_count": 0,

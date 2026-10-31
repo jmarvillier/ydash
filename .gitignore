@@ -26,3 +26,7 @@ __pycache__/
 # Build outputs (functions bundle)
 functions/lib/
 *.tsbuildinfo
+
+# Firebase emulator secrets
+.secret.local
+**/.runtimeconfig.json

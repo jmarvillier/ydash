@@ -1,0 +1,10 @@
+# Configuration gitleaks : règles par défaut + exceptions explicites.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fichiers d'exemple sans valeur réelle"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''package-lock\.json$''',
+]

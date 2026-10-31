@@ -53,3 +53,17 @@ jobs:
           path: core/coverage/
           if-no-files-found: ignore
           retention-days: 14
+
+  secrets-scan:
+    # Bloquant : aucune clé / aucun token ne doit entrer dans l'historique (D08).
+    name: secrets-scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml

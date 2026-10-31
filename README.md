@@ -56,6 +56,11 @@ python3 tickets/create_issues.py --repo jmarvillier/ydash --dry-run   # aperçu
 python3 tickets/create_issues.py --repo jmarvillier/ydash             # crée ce qui manque, résout les #refs, met à jour docs/BACKLOG.md
 ```
 
+## Sécurité
+
+Aucun secret dans le dépôt — inventaire et procédure dans [`docs/INFRA.md`](docs/INFRA.md).
+**Tout token collé par erreur dans un chat, une issue ou un commit doit être révoqué immédiatement.**
+
 ## Licence
 
 MIT (voir ticket `D01` pour l'ajout du fichier `LICENSE`).

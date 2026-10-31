@@ -49,7 +49,7 @@ feature/<clé>-<slug>  ──PR (squash)──►  develop  ──PR (merge comm
 
 | Branche     | Rôle                                   | Protection                                                                                         |
 | ----------- | -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `master`    | production (`/ydash/`), branche par défaut | PR obligatoire, checks `build-test` + `conventional-title` requis, pas de force-push ni suppression |
+| `master`    | production (`/ydash/`), branche par défaut | PR obligatoire, checks `build-test` + `secrets-scan` + `conventional-title` requis, pas de force-push ni suppression |
 | `develop`   | staging (`/ydash/staging/`)            | idem + historique linéaire (squash uniquement)                                                     |
 | `feature/*` | une branche par ticket (`fix/*`, `chore/*` acceptés) | aucune ; supprimée automatiquement après fusion                                       |
 
