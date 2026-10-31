@@ -42,3 +42,27 @@
 > git ne suffit pas : considérer la valeur comme compromise.
 
 Scan local facultatif avant de pousser : `gitleaks git .` (même config `.gitleaks.toml` que la CI).
+
+## 5. Front — GitHub Pages (prod + staging)
+
+Workflow `.github/workflows/deploy-pages.yml`, déclenché par un push sur `master` **ou** `develop`
+(et `workflow_dispatch`) :
+
+1. checkout de `master` et de `develop` côte à côte ;
+2. build web `VITE_BASE=/ydash/` (prod) et `VITE_BASE=/ydash/staging/` (staging), chacun avec sa
+   `VITE_API_BASE` (`vars.VITE_API_BASE_PROD` / `vars.VITE_API_BASE_STAGING`) ;
+3. assemblage `site/` + `site/staging/` + `.nojekyll` ; la `404.html` racine redirige les liens profonds
+   vers la bonne app (`?p=…`, restauré par `web/src/spaRedirect.ts`) ;
+4. `upload-pages-artifact` + `deploy-pages` (environnement `github-pages`, concurrence `pages`), puis
+   smoke test HTTP 200 sur les deux URLs.
+
+Conséquence : un push sur `develop` republie aussi la prod **à l'identique** (même commit `master`) et
+inversement ; aucun PAT, aucune branche de build. Le manifest PWA utilise `start_url`/`scope` relatifs
+(`./`), donc chaque environnement est une PWA distincte.
+
+**Mise en place (une fois, admin)** : `./tools/github/setup-pages.sh` — active Pages en mode
+« GitHub Actions » et autorise `master` + `develop` sur l'environnement `github-pages` (par défaut seule
+la branche par défaut peut y déployer). Renseigner ensuite les 6 secrets `VITE_FIREBASE_*` et, quand
+les Functions existent, les variables `VITE_API_BASE_PROD` / `VITE_API_BASE_STAGING`.
+
+> Alternative (à trancher dans l'ADR C01) : Firebase Hosting avec canaux de preview par PR.

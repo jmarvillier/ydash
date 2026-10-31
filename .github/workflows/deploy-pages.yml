@@ -1,0 +1,119 @@
+name: deploy-pages
+
+# Construit LES DEUX environnements à chaque fois et publie un artefact Pages unique :
+#   /ydash/          ← master  (prod)
+#   /ydash/staging/  ← develop (staging)
+# Plus de branche de build force-pushée ni de PAT (cf. v1).
+
+on:
+  push:
+    branches: [master, develop]
+    paths-ignore:
+      - 'docs/**'
+      - 'tickets/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+  VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+  VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+  VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+  VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+  VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+jobs:
+  build:
+    name: build (prod + staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout master (prod)
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: prod
+          fetch-depth: 0
+
+      - name: Checkout develop (staging)
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          path: staging
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: prod/.nvmrc
+          cache: npm
+          cache-dependency-path: |
+            prod/package-lock.json
+            staging/package-lock.json
+
+      - name: Build prod (/ydash/)
+        working-directory: prod
+        env:
+          VITE_BASE: /ydash/
+          VITE_YDASH_ENV: prod
+          VITE_API_BASE: ${{ vars.VITE_API_BASE_PROD }}
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build -w web
+
+      - name: Build staging (/ydash/staging/)
+        working-directory: staging
+        env:
+          VITE_BASE: /ydash/staging/
+          VITE_YDASH_ENV: staging
+          VITE_API_BASE: ${{ vars.VITE_API_BASE_STAGING }}
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build -w web
+
+      - name: Assemble site
+        run: |
+          mkdir -p site
+          cp -R prod/web/dist/. site/
+          mkdir -p site/staging
+          cp -R staging/web/dist/. site/staging/
+          touch site/.nojekyll
+          # GitHub Pages ne sert que la 404.html racine : elle redirige vers prod ou staging.
+          test -f site/404.html
+          echo "prod    : $(git -C prod rev-parse --short HEAD)"
+          echo "staging : $(git -C staging rev-parse --short HEAD)"
+          find site -maxdepth 2 -type f | sort
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Smoke test
+        run: |
+          base="${{ steps.deployment.outputs.page_url }}"
+          for path in "" "staging/"; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors "${base}${path}")
+            echo "${base}${path} → ${code}"
+            test "$code" = "200"
+          done

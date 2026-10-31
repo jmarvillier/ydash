@@ -1,6 +1,9 @@
 # Ydash v2
 
 [![ci](https://github.com/jmarvillier/ydash/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/jmarvillier/ydash/actions/workflows/ci.yml)
+[![deploy-pages](https://github.com/jmarvillier/ydash/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/jmarvillier/ydash/actions/workflows/deploy-pages.yml)
+[![prod](https://img.shields.io/badge/prod-jmarvillier.github.io%2Fydash-0b1426)](https://jmarvillier.github.io/ydash/)
+[![staging](https://img.shields.io/badge/staging-%2Fydash%2Fstaging-d4af37)](https://jmarvillier.github.io/ydash/staging/)
 
 > Dashboard de trading crypto personnel, **branché en direct sur OKX** (compte EEA) : journal spot, paires,
 > futures XPERP, Scaled Mirror DCA et **suivi Earn** (rendement + plus/moins-value marché).
@@ -17,8 +20,8 @@ le dépôt contient l'analyse de l'existant et le backlog complet de la migratio
 | Analyse de v1 | [`docs/ANALYSE-dashboard-weex.md`](docs/ANALYSE-dashboard-weex.md) |
 | Backlog (55 tickets, 5 milestones) | [`docs/BACKLOG.md`](docs/BACKLOG.md) · [Issues](https://github.com/jmarvillier/ydash/issues) · [Milestones](https://github.com/jmarvillier/ydash/milestones) |
 | Source du backlog initial | [`tickets/tickets.py`](tickets/tickets.py) (régénérable via `tickets/create_issues.py`) |
-| Prod (à venir) | `https://jmarvillier.github.io/ydash/` — branche `master` |
-| Staging (à venir) | `https://jmarvillier.github.io/ydash/staging/` — branche `develop` |
+| Prod | https://jmarvillier.github.io/ydash/ — branche `master` |
+| Staging | https://jmarvillier.github.io/ydash/staging/ — branche `develop` (workflow unique `deploy-pages.yml`) |
 
 ## Pourquoi v2
 

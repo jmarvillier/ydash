@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ydash</title>
+    <script>
+      // Fallback SPA pour GitHub Pages : seule la 404.html racine est servie, pour la prod
+      // (/ydash/…) comme pour le staging (/ydash/staging/…). On redirige vers la bonne
+      // application en passant le chemin demandé dans ?p=, restauré au démarrage (main.tsx).
+      (function () {
+        var l = window.location;
+        var match = l.pathname.match(/^\/ydash\/staging\//) || l.pathname.match(/^\/ydash\//);
+        var base = match ? match[0] : '/';
+        var rest = l.pathname.slice(base.length) + l.search;
+        l.replace(base + (rest ? '?p=' + encodeURIComponent(rest) : '') + l.hash);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

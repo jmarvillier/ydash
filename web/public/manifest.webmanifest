@@ -1,0 +1,11 @@
+{
+  "name": "Ydash",
+  "short_name": "Ydash",
+  "description": "Journal de trading crypto branché sur OKX",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1426",
+  "theme_color": "#0b1426",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
