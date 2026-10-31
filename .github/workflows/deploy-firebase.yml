@@ -1,0 +1,134 @@
+name: deploy-firebase
+
+# master  → codebase « prod » (fonctions health, …  → collection ydash_v2) + règles/index Firestore
+# develop → codebase « stg »  (fonctions stg-health, … → collection ydash_v2_stg)
+# Authentification GCP par Workload Identity Federation (aucune clé JSON), fallback documenté.
+
+on:
+  push:
+    branches: [master, develop]
+    paths:
+      - 'functions/**'
+      - 'core/**'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy-firebase.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Cible (prod = depuis master uniquement)'
+        type: choice
+        options: [stg, prod]
+        default: stg
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-firebase-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: dashboard-ydash
+  REGION: europe-west1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ (github.ref == 'refs/heads/master' && (github.event_name == 'push' || inputs.target == 'prod')) && 'firebase-prod' || 'firebase-stg' }}
+    steps:
+      - name: Cible
+        id: target
+        run: |
+          if [ "${GITHUB_REF}" = "refs/heads/master" ] && { [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.target }}" = "prod" ]; }; then
+            echo "env=prod" >> "$GITHUB_OUTPUT"
+            echo "only=functions:prod" >> "$GITHUB_OUTPUT"
+            echo "health=health" >> "$GITHUB_OUTPUT"
+          else
+            if [ "${{ inputs.target }}" = "prod" ]; then
+              echo "::error::Le déploiement prod n'est autorisé que depuis master"; exit 1
+            fi
+            echo "env=stg" >> "$GITHUB_OUTPUT"
+            echo "only=functions:stg" >> "$GITHUB_OUTPUT"
+            echo "health=stg-health" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Identifiants GCP configurés ?
+        id: creds
+        env:
+          WIF: ${{ secrets.GCP_WIF_PROVIDER }}
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -n "$WIF" ]; then echo "mode=wif" >> "$GITHUB_OUTPUT";
+          elif [ -n "$SA_JSON" ]; then echo "mode=json" >> "$GITHUB_OUTPUT";
+          else
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+            echo "::warning::Aucun identifiant GCP (GCP_WIF_PROVIDER ou FIREBASE_SERVICE_ACCOUNT) : déploiement ignoré. Voir docs/INFRA.md §6."
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install, test, build
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck -w functions
+          npm test -w functions
+          npm run build -w functions
+
+      - name: Auth GCP (Workload Identity Federation)
+        if: steps.creds.outputs.mode == 'wif'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Auth GCP (clé JSON — fallback)
+        if: steps.creds.outputs.mode == 'json'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Périmètre du déploiement
+        id: scope
+        if: steps.creds.outputs.mode != 'none'
+        run: |
+          only="${{ steps.target.outputs.only }}"
+          # Règles et index : prod uniquement, et seulement une fois la compatibilité v1 vérifiée
+          # (projet Firebase partagé avec dashboard-weex — voir docs/INFRA.md §6.4).
+          if [ "${{ steps.target.outputs.env }}" = "prod" ]; then
+            if [ "${{ vars.FIRESTORE_RULES_VERIFIED }}" = "true" ]; then
+              only="$only,firestore:rules,firestore:indexes"
+            else
+              echo "::warning::Règles/index Firestore NON déployés : variable FIRESTORE_RULES_VERIFIED != true"
+            fi
+          fi
+          echo "only=$only" >> "$GITHUB_OUTPUT"
+          echo "Déploiement : $only" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy
+        if: steps.creds.outputs.mode != 'none'
+        run: >
+          npx firebase deploy
+          --project "$PROJECT_ID"
+          --only "${{ steps.scope.outputs.only }}"
+          --non-interactive --force
+          --message "${GITHUB_REF_NAME}@${GITHUB_SHA::7}"
+
+      - name: Smoke test /health
+        if: steps.creds.outputs.mode != 'none'
+        run: |
+          url="https://${REGION}-${PROJECT_ID}.cloudfunctions.net/${{ steps.target.outputs.health }}"
+          body=$(curl -sf --retry 6 --retry-delay 10 --retry-all-errors "$url")
+          echo "$url → $body"
+          echo "$body" | grep -q '"status":"ok"'
+          echo "$body" | grep -q "\"env\":\"${{ steps.target.outputs.env }}\""

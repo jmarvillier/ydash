@@ -1,8 +1,14 @@
 {
   "functions": [
     {
-      "source": "functions/lib",
-      "codebase": "default",
+      "source": "functions/lib/prod",
+      "codebase": "prod",
+      "runtime": "nodejs22",
+      "predeploy": ["npm run build -w functions"]
+    },
+    {
+      "source": "functions/lib/stg",
+      "codebase": "stg",
       "runtime": "nodejs22",
       "predeploy": ["npm run build -w functions"]
     }

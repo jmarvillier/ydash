@@ -66,3 +66,76 @@ la branche par défaut peut y déployer). Renseigner ensuite les 6 secrets `VITE
 les Functions existent, les variables `VITE_API_BASE_PROD` / `VITE_API_BASE_STAGING`.
 
 > Alternative (à trancher dans l'ADR C01) : Firebase Hosting avec canaux de preview par PR.
+
+## 6. Backend — Firebase (Functions, règles, index)
+
+### 6.1 Deux codebases, un seul projet
+
+Le projet Firebase **`dashboard-ydash`** (déjà utilisé par v1) héberge les deux environnements backend :
+
+| Codebase | Source            | Branche   | Fonctions          | Collection racine | URL de base (`VITE_API_BASE_*`)                                 |
+| -------- | ----------------- | --------- | ------------------ | ----------------- | --------------------------------------------------------------- |
+| `prod`   | `functions/lib/prod` | `master`  | `health`, …        | `ydash_v2`        | `https://europe-west1-dashboard-ydash.cloudfunctions.net/`      |
+| `stg`    | `functions/lib/stg`  | `develop` | `stg-health`, …    | `ydash_v2_stg`    | `https://europe-west1-dashboard-ydash.cloudfunctions.net/stg-`  |
+
+`functions/scripts/build.mjs` produit les deux bundles (esbuild, `core` inliné, `YDASH_ENV` figé au build).
+Le front appelle `apiUrl('health')` (`web/src/api.ts`) : le préfixe `stg-` est porté par `VITE_API_BASE_STAGING`.
+
+### 6.2 Workflow `deploy-firebase.yml`
+
+- push `master` → `firebase deploy --only functions:prod[,firestore:rules,firestore:indexes]`
+- push `develop` → `firebase deploy --only functions:stg`
+- déclenché seulement si `functions/`, `core/`, `firebase.json`, `firestore.*` ou le lockfile changent ;
+  `workflow_dispatch` possible (prod refusé hors `master`)
+- typecheck + tests + build avant déploiement, puis **smoke test** `GET /health` (`status: ok` et bon `env`)
+- sans identifiants GCP configurés, le job se termine en **warning** (pas d'échec) : rien n'est déployé.
+
+### 6.3 Mise en place GCP (une fois)
+
+1. Passer le projet au **plan Blaze** (requis pour Functions v2, Scheduler, Secret Manager).
+2. Activer les APIs :
+   ```bash
+   gcloud services enable cloudfunctions.googleapis.com run.googleapis.com cloudbuild.googleapis.com \
+     artifactregistry.googleapis.com eventarc.googleapis.com cloudscheduler.googleapis.com \
+     secretmanager.googleapis.com firebaserules.googleapis.com firestore.googleapis.com \
+     iamcredentials.googleapis.com --project dashboard-ydash
+   ```
+3. Compte de service de déploiement + **Workload Identity Federation** (aucune clé JSON) :
+   ```bash
+   PROJECT=dashboard-ydash
+   PROJECT_NUMBER=$(gcloud projects describe $PROJECT --format='value(projectNumber)')
+   gcloud iam service-accounts create github-deployer --project $PROJECT
+   SA=github-deployer@$PROJECT.iam.gserviceaccount.com
+   for role in roles/cloudfunctions.admin roles/run.admin roles/iam.serviceAccountUser \
+               roles/artifactregistry.admin roles/firebaserules.admin roles/datastore.indexAdmin \
+               roles/cloudscheduler.admin roles/secretmanager.viewer roles/serviceusage.serviceUsageConsumer \
+               roles/firebase.viewer; do
+     gcloud projects add-iam-policy-binding $PROJECT --member "serviceAccount:$SA" --role $role
+   done
+   gcloud iam workload-identity-pools create github --location global --project $PROJECT
+   gcloud iam workload-identity-pools providers create-oidc ydash --location global \
+     --workload-identity-pool github --project $PROJECT \
+     --issuer-uri https://token.actions.githubusercontent.com \
+     --attribute-mapping "google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref" \
+     --attribute-condition "assertion.repository == 'jmarvillier/ydash'"
+   gcloud iam service-accounts add-iam-policy-binding $SA --project $PROJECT \
+     --role roles/iam.workloadIdentityUser \
+     --member "principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github/attribute.repository/jmarvillier/ydash"
+   ```
+4. Secrets GitHub : `GCP_WIF_PROVIDER` =
+   `projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/ydash`,
+   `GCP_SERVICE_ACCOUNT` = `github-deployer@dashboard-ydash.iam.gserviceaccount.com`.
+   *Fallback (déconseillé)* : clé JSON du compte de service dans `FIREBASE_SERVICE_ACCOUNT`.
+5. Variables GitHub : `VITE_API_BASE_PROD` et `VITE_API_BASE_STAGING` (tableau 6.1).
+6. Optionnel : protéger l'environnement GitHub `firebase-prod` (relecture requise avant déploiement prod).
+
+### 6.4 ⚠️ Règles Firestore — projet partagé avec v1
+
+Déployer `firestore.rules` **remplace** les règles de production de v1 (`users/{uid}/…`). Avant le premier
+déploiement des règles :
+
+1. Exporter les règles actuellement en prod (console Firebase › Firestore › Règles, ou
+   `npx firebase firestore:rules:get` selon la version de la CLI) et les comparer au bloc « v1 » de
+   `firestore.rules` ; reporter toute différence.
+2. Tester avec l'émulateur (`npm run dev:full`), puis seulement alors créer la variable GitHub
+   **`FIRESTORE_RULES_VERIFIED=true`**. Tant qu'elle est absente, la CI déploie les fonctions mais **jamais** les règles.
