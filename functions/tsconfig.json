@@ -8,5 +8,5 @@
       "@core/*": ["../core/src/*"]
     }
   },
-  "include": ["src", "scripts", "vitest.config.ts"]
+  "include": ["src", "scripts", "fixtures", "vitest.config.ts"]
 }

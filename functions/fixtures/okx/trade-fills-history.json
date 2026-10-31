@@ -1,0 +1,48 @@
+{
+  "code": "0",
+  "msg": "",
+  "data": [
+    {
+      "instType": "SPOT",
+      "instId": "BTC-USDC",
+      "tradeId": "900000001",
+      "ordId": "700000000000000001",
+      "billId": "800000000000000001",
+      "side": "buy",
+      "fillPx": "98000",
+      "fillSz": "0.01",
+      "fee": "-0.00001",
+      "feeCcy": "BTC",
+      "execType": "T",
+      "ts": "1759300000000"
+    },
+    {
+      "instType": "SPOT",
+      "instId": "ETH-USDC",
+      "tradeId": "900000002",
+      "ordId": "700000000000000002",
+      "billId": "800000000000000002",
+      "side": "buy",
+      "fillPx": "3400",
+      "fillSz": "0.2",
+      "fee": "-0.0002",
+      "feeCcy": "ETH",
+      "execType": "M",
+      "ts": "1759900000000"
+    },
+    {
+      "instType": "SPOT",
+      "instId": "BTC-USDC",
+      "tradeId": "900000003",
+      "ordId": "700000000000000003",
+      "billId": "800000000000000003",
+      "side": "sell",
+      "fillPx": "104500",
+      "fillSz": "0.004",
+      "fee": "-0.418",
+      "feeCcy": "USDC",
+      "execType": "T",
+      "ts": "1760800000000"
+    }
+  ]
+}

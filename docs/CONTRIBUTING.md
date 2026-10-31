@@ -33,7 +33,8 @@ ydash/
 | Commande                                       | Effet                                                 |
 | ---------------------------------------------- | ----------------------------------------------------- |
 | `npm ci`                                       | installe tous les workspaces                          |
-| `npm run dev`                                  | lance l'app web (Vite)                                |
+| `npm run dev`                                  | stack local complet : émulateurs + functions (watch) + web + seed (voir ONBOARDING) |
+| `npm run dev:web`                              | l'app web seule (Vite)                                |
 | `npm run lint` / `npm run format`              | ESLint (0 warning toléré) / Prettier                  |
 | `npm run typecheck`                            | `tsc --noEmit` dans chaque workspace                  |
 | `npm test` / `npm run test:coverage`           | Vitest dans chaque workspace                          |

@@ -1,0 +1,15 @@
+{
+  "code": "0",
+  "msg": "",
+  "data": [
+    {
+      "uTime": "1761900000000",
+      "totalEq": "12450.32",
+      "details": [
+        { "ccy": "USDC", "eq": "3200.5", "availBal": "3200.5", "eqUsd": "3200.18" },
+        { "ccy": "BTC", "eq": "0.0721", "availBal": "0.0721", "eqUsd": "7425.10" },
+        { "ccy": "ETH", "eq": "0.52", "availBal": "0.52", "eqUsd": "1825.04" }
+      ]
+    }
+  ]
+}

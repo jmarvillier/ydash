@@ -52,6 +52,15 @@ Monorepo npm workspaces : `web/` (Vite + React + TS, PWA) · `functions/` (Fireb
 3. **Volet Earn** — positions Earn (Simple Earn, LYUSDC, OKSOL…), intérêts/APR réalisé, PnL marché vs coût moyen et vs date d'entrée
 4. **Bascule & qualité** — E2E, recette de parité, documentation, plan de bascule (sans toucher à v1 avant GO)
 
+## Démarrer en local
+
+```bash
+npm ci
+npm run dev   # émulateurs Firebase + functions + web + données de démo (demo@ydash.local / ydash-demo)
+```
+
+Détails : [`docs/ONBOARDING.md`](docs/ONBOARDING.md) · conventions : [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) · infra : [`docs/INFRA.md`](docs/INFRA.md).
+
 ## Régénérer / compléter le backlog
 
 ```bash
