@@ -61,7 +61,7 @@ def ensure_labels(repo, dry):
 
 
 def ensure_milestones(repo, dry):
-    existing = {m["title"]: m for m in gh([f"repos/{repo}/milestones", "--paginate", "-f", "state=all"])}
+    existing = {m["title"]: m for m in gh([f"repos/{repo}/milestones?state=all&per_page=100"])}
     numbers = {}
     for title, desc in tickets.MILESTONES:
         if title in existing:
