@@ -84,3 +84,15 @@ workflow `pr-title` (le squash en fait le message de commit, lu ensuite par rele
 
 Scopes : `web`, `functions`, `core`, `docs`, `deps`, `ci`, `release`, `main` (facultatif).
 Exemples : `feat(functions): proxy OKX signé`, `fix(web): arrondi du PnL latent`, `ci: cache npm`.
+
+## Tickets et revue
+
+- Nouvelle issue : gabarits **Fonctionnalité**, **Bug** ou **Technique** (`.github/ISSUE_TEMPLATE/`), toujours
+  avec Contexte / Objectif / Tâches / Critères d'acceptation / Dépendances / Taille. Ajouter le milestone et
+  les labels `area/*` et `P0|P1|P2`.
+- PR : gabarit `.github/PULL_REQUEST_TEMPLATE.md` (`Closes #…`, checklist, captures iPad si UI).
+- `CODEOWNERS` : `@jmarvillier` sur tout le dépôt.
+- Suivi : GitHub Project « Ydash v2 », créé et alimenté par `./tools/github/create-project.sh`
+  (vues Board par milestone + Table à ajouter dans l'UI).
+- `tickets/` reste dans le dépôt : c'est la source du backlog initial (55 tickets). Le label `bug` est
+  créé par `python3 tickets/create_issues.py --repo jmarvillier/ydash` (idempotent).

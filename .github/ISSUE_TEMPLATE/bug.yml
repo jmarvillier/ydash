@@ -1,0 +1,59 @@
+name: 🐞 Bug
+description: Comportement incorrect constaté
+title: 'fix: '
+labels: [bug]
+body:
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Contexte
+      description: Page, environnement (prod / staging / local), appareil (iPad, iPhone, desktop), version (Réglages).
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Étapes de reproduction
+      value: |
+        1. 
+        2.
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Objectif — comportement attendu vs observé
+    validations:
+      required: true
+  - type: textarea
+    id: taches
+    attributes:
+      label: Tâches
+      value: |
+        - [ ] Test de non-régression
+        - [ ] Correctif
+  - type: textarea
+    id: criteres
+    attributes:
+      label: Critères d'acceptation
+      value: |
+        - [ ] Le scénario de reproduction ne se produit plus
+        - [ ] Un test couvre le cas
+  - type: textarea
+    id: dependances
+    attributes:
+      label: Dépendances
+      placeholder: Aucune
+  - type: dropdown
+    id: taille
+    attributes:
+      label: Taille
+      options:
+        - S (≤ ½ journée)
+        - M (1 à 2 jours)
+        - L (3 jours et +)
+  - type: textarea
+    id: captures
+    attributes:
+      label: Captures / logs
+      description: Ne JAMAIS coller de clé API, token ou mot de passe (voir docs/INFRA.md).

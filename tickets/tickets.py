@@ -29,6 +29,7 @@ LABELS = [
     ("test",       "c2e0c6", "Tests unitaires, parité, E2E"),
     ("security",   "b60205", "Sécurité, secrets, règles d'accès"),
     ("decision",   "d4c5f9", "Nécessite une décision avant implémentation"),
+    ("bug",        "d73a4a", "Comportement incorrect (gabarit bug.yml)"),
     # area
     ("area/frontend",  "bfdadc", "Application web (web/)"),
     ("area/backend",   "f9d0c4", "Cloud Functions (functions/)"),

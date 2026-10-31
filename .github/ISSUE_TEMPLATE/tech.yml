@@ -1,0 +1,52 @@
+name: 🛠️ Technique
+description: Tâche technique, socle, refactoring, DevOps
+title: ''
+labels: [tech]
+body:
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Contexte
+      description: Pourquoi ce travail est nécessaire (dette, socle, outillage).
+    validations:
+      required: true
+  - type: textarea
+    id: objectif
+    attributes:
+      label: Objectif
+      description: Résultat technique attendu.
+    validations:
+      required: true
+  - type: textarea
+    id: taches
+    attributes:
+      label: Tâches
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: criteres
+    attributes:
+      label: Critères d'acceptation
+      description: Vérifiables, idéalement testables.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: dependances
+    attributes:
+      label: Dépendances
+      description: 'Tickets bloquants (#…) ou « Aucune ».'
+      placeholder: Aucune
+  - type: dropdown
+    id: taille
+    attributes:
+      label: Taille
+      options:
+        - S (≤ ½ journée)
+        - M (1 à 2 jours)
+        - L (3 jours et +)
+    validations:
+      required: true

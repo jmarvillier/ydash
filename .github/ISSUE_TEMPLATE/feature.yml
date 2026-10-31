@@ -1,0 +1,52 @@
+name: ✨ Fonctionnalité
+description: Nouvelle fonctionnalité visible par l'utilisateur
+title: ''
+labels: [feature]
+body:
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Contexte
+      description: Quel besoin utilisateur ? Quelle page / quel volet (Dashboard, Paires, XPERPS, DCA, Earn…) ?
+    validations:
+      required: true
+  - type: textarea
+    id: objectif
+    attributes:
+      label: Objectif
+      description: Ce que l'utilisateur pourra faire une fois le ticket terminé.
+    validations:
+      required: true
+  - type: textarea
+    id: taches
+    attributes:
+      label: Tâches
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: criteres
+    attributes:
+      label: Critères d'acceptation
+      description: Vérifiables, idéalement testables.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: dependances
+    attributes:
+      label: Dépendances
+      description: 'Tickets bloquants (#…) ou « Aucune ».'
+      placeholder: Aucune
+  - type: dropdown
+    id: taille
+    attributes:
+      label: Taille
+      options:
+        - S (≤ ½ journée)
+        - M (1 à 2 jours)
+        - L (3 jours et +)
+    validations:
+      required: true
