@@ -22,3 +22,7 @@ ui-debug.log
 .idea/
 .vscode/
 __pycache__/
+
+# Build outputs (functions bundle)
+functions/lib/
+*.tsbuildinfo

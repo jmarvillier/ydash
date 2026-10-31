@@ -1,0 +1,10 @@
+node_modules
+dist
+lib
+coverage
+package-lock.json
+CHANGELOG.md
+docs/BACKLOG.md
+docs/ANALYSE-dashboard-weex.md
+tickets/
+*.md

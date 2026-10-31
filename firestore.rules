@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// ⚠️ Le projet Firebase `dashboard-ydash` est PARTAGÉ avec Ydash v1 (dashboard-weex), toujours en prod.
+// Déployer ce fichier REMPLACE les règles de v1 : le bloc « v1 » doit rester équivalent aux règles
+// actuellement en production (voir docs/INFRA.md § Règles Firestore avant tout premier déploiement).
+// Le modèle v2 détaillé (collections, validations) arrive avec le ticket C04.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ---- v1 (dashboard-weex) — NE PAS MODIFIER sans GO -------------------------------
+    match /users/{uid}/{document=**} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // ---- v2 — prod et staging isolés par collection racine --------------------------
+    // Écritures OKX réservées au backend (Admin SDK, hors règles). Provisoire jusqu'à C04.
+    match /ydash_v2/{uid}/{document=**} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    match /ydash_v2_stg/{uid}/{document=**} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // Tout le reste est refusé.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

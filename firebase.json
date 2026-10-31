@@ -1,0 +1,14 @@
+{
+  "functions": [
+    {
+      "source": "functions/lib",
+      "codebase": "default",
+      "runtime": "nodejs22",
+      "predeploy": ["npm run build -w functions"]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
